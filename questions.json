@@ -1,0 +1,43 @@
+{
+  "subject": "AP Calculus AB",
+  "questions": [
+    {
+      "id": 1,
+      "year": 2023,
+      "part": "A",
+      "calculator": true,
+      "points": 9,
+      "prompt": "A customer at a gas station is pumping gasoline into a gas tank. The rate of flow of gasoline is modeled by a differentiable function f, where f(t) is measured in gallons per second and t is measured in seconds since pumping began. Selected values of f(t) are given in the table.",
+      "table": {
+        "t (seconds)": [0, 60, 90, 120, 135, 150],
+        "f(t) (gallons per second)": [0, 0.1, 0.15, 0.1, 0.05, 0]
+      },
+      "parts": [
+        {
+          "label": "a",
+          "question": "Using correct units, interpret the meaning of \\( \\int_{60}^{135} f(t) \\, dt \\) in the context of the problem. Use a right Riemann sum with the three subintervals [60, 90], [90, 120], and [120, 135] to approximate the value of \\( \\int_{60}^{135} f(t) \\, dt \\).",
+          "answer": "\\( \\int_{60}^{135} f(t) \\, dt \\) represents the total number of gallons of gasoline pumped into the gas tank from time \\( t = 60 \\) seconds to \\( t = 135 \\) seconds. \\( \\int_{60}^{135} f(t) \\, dt \\approx f(90)(90 - 60) + f(120)(120 - 90) + f(135)(135 - 120) = (0.15)(30) + (0.1)(30) + (0.05)(15) = 8.25 \\) gallons.",
+          "points": 3
+        },
+        {
+          "label": "b",
+          "question": "Must there exist a value of \\( c \\), for \\( 60 < c < 120 \\), such that \\( f'(c) = 0 \\)? Justify your answer.",
+          "answer": "Yes. \\( f \\) is differentiable, so \\( f \\) is continuous on \\[ 60, 120 \\]. \\( f(120) - f(60) = 0.1 - 0.1 = 0 \\). By the Mean Value Theorem, there must exist a \\( c \\), for \\( 60 < c < 120 \\), such that \\( f'(c) = 0 \\).",
+          "points": 2
+        },
+        {
+          "label": "c",
+          "question": "The rate of flow of gasoline, in gallons per second, can also be modeled by \\( g(t) = \\frac{t}{500} \\cos\\left(\\left(\\frac{t}{120}\\right)^2\\right) \\) for \\( 0 \\leq t \\leq 150 \\). Using this model, find the average rate of flow of gasoline over the time interval \\( 0 \\leq t \\leq 150 \\). Show the setup for your calculations.",
+          "answer": "The average rate is \\( \\frac{1}{150} \\int_0^{150} g(t) \\, dt \\approx 0.096 \\) gallons per second.",
+          "points": 2
+        },
+        {
+          "label": "d",
+          "question": "Using the model \\( g \\) defined in part (c), find the value of \\( g'(140) \\). Interpret the meaning of your answer in the context of the problem.",
+          "answer": "\\( g'(140) \\approx -0.005 \\). The rate at which gasoline is flowing into the tank is decreasing at a rate of 0.005 gallon per second per second at time \\( t = 140 \\) seconds.",
+          "points": 2
+        }
+      ]
+    }
+  ]
+}

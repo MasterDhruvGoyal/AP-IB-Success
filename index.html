@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AP Calculus AB Questions</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-100">
+  <style>
+    /* Collapsed sidebar styles */
+    aside#sidebar.collapsed {
+      width: 0 !important;
+      padding: 0 !important;
+      min-width: 0 !important;
+    }
+    aside#sidebar.collapsed .sidebar-content { display: none; }
+    #expand-btn { display: none; }
+    @media (max-width: 768px) {
+      /* On small screens, allow sidebar to overlay */
+      aside#sidebar { position: fixed; z-index: 40; height: 100vh; }
+    }
+  </style>
+
+  <div class="w-full min-h-screen flex">
+    <!-- Expand button (visible when sidebar collapsed) -->
+    <button id="expand-btn" class="fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none" title="Open sidebar">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    </button>
+    <!-- Sidebar -->
+    <aside id="sidebar" class="flex-shrink-0 bg-white border-r border-gray-200 p-4 transition-all duration-300 w-72" aria-label="Sidebar">
+      <div class="sidebar-content">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-bold">Subjects</h2>
+          <p class="text-sm text-gray-500">Select a subject</p>
+        </div>
+        <button id="collapse-btn" class="p-2 rounded-md bg-gray-100 hover:bg-gray-200 focus:outline-none" title="Toggle sidebar">
+          <svg id="collapse-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 10a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+
+      <nav id="subjects-list" class="space-y-2 mb-6"></nav>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="flex-1 p-8" id="main-area">
+      <div class="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-2xl shadow-lg px-8 py-6 mb-8">
+        <h1 id="main-title" class="text-3xl font-extrabold">AP Calculus AB</h1>
+        <p id="main-sub" class="text-sm opacity-90">Practice, Learn, and Master Calculus</p>
+      </div>
+
+      <div id="content" class="mx-auto" style="max-width:1200px">
+        <!-- Action cards (Diagnostic / FRQ / MCQ) -->
+        <div id="action-cards" class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <!-- cards populated by JS -->
+        </div>
+
+        <div id="questions-container" class="space-y-10"></div>
+      </div>
+    </main>
+  </div>
+  <script>
+    async function fetchQuestions() {
+      const response = await fetch('questions.json');
+      return await response.json();
+    }
+
+    function renderTable(table) {
+      if (!table) return '';
+      const headers = Object.keys(table);
+      const rows = table[headers[0]].map((_, i) => headers.map(h => table[h][i]));
+      return `
+        <div class="overflow-x-auto mb-6">
+          <table class="w-full rounded-xl shadow border border-gray-300 bg-white table-auto">
+            <thead class="bg-gradient-to-r from-blue-100 to-purple-100">
+              <tr>${headers.map(h => `<th class="px-4 py-2 border-b font-semibold text-gray-700">${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `<tr>${row.map(cell => `<td class="px-4 py-2 border-b text-center">${cell}</td>`).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderQuestionCard(question, index) {
+      // index is 0-based; label as FRQ-1, FRQ-2, ...
+      const qId = `frq-${index+1}`;
+      let html = `
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <button class="w-full text-left px-6 py-4 flex items-center justify-between focus:outline-none frq-toggle" data-frq-id="${qId}">
+            <div>
+              <div class="text-sm text-gray-500">FRQ-${index+1}</div>
+              <div class="text-lg font-semibold text-gray-900 mt-1">${escapeHtml(question.prompt || '').slice(0, 140)}${(question.prompt || '').length > 140 ? '...' : ''}</div>
+            </div>
+            <div class="text-gray-400">+</div>
+          </button>
+          <div id="${qId}" class="frq-body hidden px-6 py-4 bg-gray-50">
+            ${question.table ? renderTable(question.table) : ''}
+            ${question.parts.map((part, pIdx) => `
+              <div class="bg-white rounded-lg p-4 mb-3 border">
+                <div class="text-sm font-semibold text-gray-700">(${part.label})</div>
+                <div class="mt-2 latex text-gray-900">${part.question}</div>
+                <button onclick="toggleAnswer('${qId}-${pIdx}')" class="mt-3 px-4 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded">Show Answer</button>
+                <div id="answer-${qId}-${pIdx}" class="hidden mt-3 bg-white p-3 border rounded">
+                  <div class="latex text-gray-900">${part.answer}</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      return html;
+    }
+
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"']/g, function(s) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[s]; });
+    }
+
+    function toggleAnswer(id) {
+      const el = document.getElementById('answer-' + id);
+      if (el) {
+        el.classList.toggle('hidden');
+        MathJax.typesetPromise([el]);
+      }
+    }
+
+    async function renderQuestions() {
+      const data = await fetchQuestions();
+      const container = document.getElementById('questions-container');
+      container.innerHTML = data.questions.map((q, i) => renderQuestion(q, i)).join('');
+      MathJax.typesetPromise();
+    }
+
+    // Sidebar population and interactions
+    async function initSidebar() {
+      const data = await fetchQuestions();
+      const subjectsList = document.getElementById('subjects-list');
+      // For now derive subjects from data.subject
+      const subjectName = data.subject || 'Subject';
+      const li = document.createElement('div');
+      li.className = 'p-3 rounded hover:bg-gray-50 cursor-pointer';
+      li.textContent = subjectName;
+      li.onclick = () => selectSubject(subjectName, data);
+      subjectsList.appendChild(li);
+    }
+
+    function selectSubject(name, data) {
+      document.getElementById('main-title').textContent = name;
+      document.getElementById('main-sub').textContent = data.questions && data.questions.length ? `${data.questions.length} questions available` : '';
+      document.getElementById('subject-actions').classList.remove('hidden');
+      // default to FRQs hidden until clicked
+      document.getElementById('questions-container').innerHTML = '';
+    }
+
+    // Collapse/expand sidebar and wire action cards
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('collapse-btn');
+      const sidebar = document.getElementById('sidebar');
+      const expandBtn = document.getElementById('expand-btn');
+      let collapsed = false;
+
+      function setCollapsed(state) {
+        collapsed = state;
+        if (collapsed) {
+          sidebar.classList.add('collapsed');
+          expandBtn.style.display = 'block';
+        } else {
+          sidebar.classList.remove('collapsed');
+          expandBtn.style.display = 'none';
+        }
+      }
+
+      btn.addEventListener('click', () => setCollapsed(true));
+      expandBtn.addEventListener('click', () => setCollapsed(false));
+
+      // Initialize action cards in main area
+      const actionCards = document.getElementById('action-cards');
+      const actions = [
+        { id: 'diagnostic', title: 'Diagnostic Test', desc: 'Quick assessment to find weak spots.' },
+        { id: 'frq', title: 'Practice FRQs', desc: 'Practice free-response questions.' },
+        { id: 'mcq', title: 'Practice MCQs', desc: 'Multiple choice practice.' }
+      ];
+
+      actions.forEach(a => {
+        const card = document.createElement('button');
+        card.className = 'bg-white p-6 rounded-xl shadow-lg hover:shadow-2xl text-left transition flex flex-col';
+        card.id = `card-${a.id}`;
+        card.innerHTML = `<span class="text-lg font-semibold mb-2">${a.title}</span><span class="text-sm text-gray-500">${a.desc}</span>`;
+        actionCards.appendChild(card);
+      });
+
+      // Wire FRQ card to render questions
+      document.getElementById('card-frq').addEventListener('click', async () => {
+        const data = await fetchQuestions();
+        document.getElementById('main-title').textContent = data.subject || 'Questions';
+        document.getElementById('main-sub').textContent = data.questions && data.questions.length ? `${data.questions.length} questions available` : '';
+        const container = document.getElementById('questions-container');
+        // Render each question as an expandable card
+        container.innerHTML = data.questions.map((q, i) => renderQuestionCard(q, i)).join('');
+        MathJax.typesetPromise();
+      });
+
+      // initialize sidebar list
+      initSidebar();
+
+      // FRQ card toggle via delegation
+      document.addEventListener('click', (e) => {
+        const toggle = e.target.closest('.frq-toggle');
+        if (toggle) {
+          const frqId = toggle.dataset.frqId;
+          const body = document.getElementById(frqId);
+          if (body) {
+            const open = !body.classList.contains('hidden');
+            if (open) {
+              body.classList.add('hidden');
+            } else {
+              body.classList.remove('hidden');
+              MathJax.typesetPromise([body]);
+            }
+          }
+        }
+      });
+    });
+
+  </script>
+</body>
+</html>
